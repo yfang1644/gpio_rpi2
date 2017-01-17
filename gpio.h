@@ -45,13 +45,13 @@
 */
 
 /*  The GPIO has 41 registers. Some are used below: */
-#define GPIOBASE    0x3f200000
-#define	GPFSEL0	    (0x00/4)   /* function select register0 */
-#define	GPFSEL1	    (0x04/4)   /* function select register1 */
-#define	GPFSEL2	    (0x08/4)   /* function select register2 */
-#define	GPFSEL3	    (0x0C/4)   /* function select register3 */
-#define	GPFSEL4	    (0x10/4)   /* function select register4 */
-#define	GPFSEL5	    (0x14/4)   /* function select register5 */
+#define GPIOBASE    (0x3F200000)
+#define	GPFSEL0	    (0x00)   /* function select register0 */
+#define	GPFSEL1	    (0x04)   /* function select register1 */
+#define	GPFSEL2	    (0x08)   /* function select register2 */
+#define	GPFSEL3	    (0x0C)   /* function select register3 */
+#define	GPFSEL4	    (0x10)   /* function select register4 */
+#define	GPFSEL5	    (0x14)   /* function select register5 */
 
 /* Every 3-bits in function select register defines the pin function.
  *      000 = GPIO Pin 9 is an input
@@ -72,13 +72,13 @@
 */
 /*  When pins are set as Output, write "1" to GPIO SET regisgter will set
 *  the corresponding pin. Write "0" has no effect*/
-#define	GPSET0	    (0x1C/4)   /* bit set 0. GPIO0-31 */
-#define	GPSET1	    (0x20/4)   /* bit set 1. GPIO32-53 */
+#define	GPSET0	    (0x1C)   /* bit set 0. GPIO0-31 */
+#define	GPSET1	    (0x20)   /* bit set 1. GPIO32-53 */
 /*  Write "1" to GPIO CLR register will clear the pin. Write "0" has no effect */
-#define	GPCLR0	    (0x28/4)   /* bit clear 0. GPIO0-31 */
-#define	GPCLR1      (0x2C/4)   /* bit clear 1. GPIO32-53 */
+#define	GPCLR0	    (0x28)   /* bit clear 0. GPIO0-31 */
+#define	GPCLR1      (0x2C)   /* bit clear 1. GPIO32-53 */
 
-#define	GPLEV0	    (0x34/4)   /* level holder register 0. GPIO0-31 */
-#define	GPLEV1      (0x38/4)   /* level holder register 1. GPIO32-53 */
+#define	GPLEV0	    (0x34)   /* level holder register 0. GPIO0-31 */
+#define	GPLEV1      (0x38)   /* level holder register 1. GPIO32-53 */
 
 #endif // _GPIO_H

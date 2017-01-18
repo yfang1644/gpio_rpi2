@@ -39,14 +39,12 @@ int gpio_open(struct inode *inode, struct file *filp)
 
     /* Set first 28 pins (except 0,1,14,15) as output */
     for (i = 0; i < 28; i++) {
-        if ((i == 0) || (i == 1) || (i == 14) | (i ==15))
-            continue;
         n = i / 10;
         shift = (i % 10) * 3;
-        val = *(int *)(gpio + n*4);
+        val = gpio[n];
         val &= ~(0b111 << shift);
         val |= (0b001 << shift);
-        *(int *)(gpio + n*4) = val;
+        gpio[n] = val;
     }
 
     printk("file opened\n");
@@ -63,79 +61,78 @@ ssize_t gpio_read (struct file *filp,
                   size_t size,
                   loff_t *offset)
 {
-    int val, n, opsize;
+    int val, n;
     
-    if (size > 8)  size = 8;
-    val = *(int *)(gpio + GPLEV0);
-    if(size >= 4) {
-        n = copy_to_user(buf, &val, 4);
-        opsize = (4 - n);
-    } else {
-        n = copy_to_user(buf, &val, size);
-        opsize = (size - n);
-    }
+    val = gpio[GPLEV0];
+    n = copy_to_user(buf, &val, 4);
 
-    size -= 4;
-    if (size > 0) {
-        val = *(int *)(gpio + GPLEV1);
-        n = copy_to_user(buf+opsize, &val, size);
-        opsize += (size - n);
-    }
-    return opsize;
+    return 4;
 }
 
+
+/* Set certain pins to "0" or "1". Bit31 is used to identify "SET/CLR"
+ */
 ssize_t gpio_write (struct file *filp,
                    const char __user *buf,
                    size_t size,
                    loff_t *offset)
 {
-    int val, set, clr, n, opsize;
+    int val, n;
 
-    if (size > 8)  size = 8;
-    val = 0;
-    if (size >= 0) {
-        n = copy_from_user(&val, buf, 4);
-        opsize = (4 - n);
+    n = copy_from_user(&val, buf, 4);
+    if (val & 0x80000000) {
+        val &= 0x7FFFFFFF;
+        gpio[GPSET0] = val;
     } else {
-        n = copy_from_user(&val, buf, size);
-        opsize = (size - n);
+        gpio[GPCLR0] = val;
     }
-        printk("write val=%x\n", val);
-    set = val;
-    clr = ~val;
-    *(int *)(gpio + GPSET0) = set;
-    *(int *)(gpio + GPCLR0) = clr;
-    
-    size -= 4;
-    if (size > 0) {
-        n = copy_from_user(&val, buf, size);
-        opsize += (size -n);
-    }
-        printk("write val=%x\n", val);
-    set = val;
-    clr = ~val;
-    *(int *)(gpio + GPSET1) = set;
-    *(int *)(gpio + GPCLR1) = clr;
+    printk("write val=%X\n", val);
 
-    return opsize;
+    return size;
 }
 
 
-/* IOCTL set GPIO0-31 direction. 0 as INPUT, 1 as OUTPUT */
+/* IOCTL set LSB32 of GPIO direction in "args". "1" to set, "0" to ignore */
+/* upper 22 pins not available in PINout */
 long gpio_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
+    int i, val;
+    int regs, indx;   /* register and index */
+
     switch (cmd) {
         case GPIOSETIN:
+            for (i = 0; i < 32; i++) {
+                if(arg & 1) {
+                    regs = i / 10;
+                    indx = (i % 10) * 3;
+                    val = gpio[regs];
+                    val &= ~(0b111 << indx);
+                    val |= 0b000 << indx;
+                    gpio[regs] = val;
+                }
+                arg >>= 1;
+            }
             break;
         case GPIOSETOUT:
+            for (i = 0; i < 32; i++) {
+                if(arg & 1) {
+                    regs = i / 10;
+                    indx = (i%10) * 3;
+                    val = gpio[regs];
+                    val &= ~(0b111 << indx);
+                    val |= 0b001 << indx;
+                    gpio[regs] = val;
+                }
+                arg >>= 1;
+            }
             break;
         default:
-            break
+            break;
     }
     return 0;
 }
 
-struct file_operations fop={
+struct file_operations fop= {
     .open    = gpio_open,
     .release = gpio_close,
     .read    = gpio_read,
@@ -147,8 +144,8 @@ int init_module(void)
 {
     int val;
 
-    val = register_chrdev(223, "GPIO driver", &fop);
-    gpio = ioremap(GPIOBASE, 0x40*4); // Less than 64 32-bit registers
+    val = register_chrdev(GPIO_MAJOR, "GPIO driver", &fop);
+    gpio = ioremap(GPIOBASE, 0x40);    // Less than 41 32-bit registers
 
     printk ("GPIO-> %p", gpio);
     printk("GPIO driver installed\n");
@@ -159,7 +156,7 @@ void cleanup_module(void)
 {
     iounmap(gpio);
 
-    unregister_chrdev(223, "GPIO driver");
+    unregister_chrdev(GPIO_MAJOR, "GPIO driver");
     printk("GPIO driver removed\n");
 }
 

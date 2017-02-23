@@ -40,7 +40,7 @@
        CLKOUT  41   42  GP0_7              GP2_10  41   42  GP2_11
          DGND  43   44  DGND               GP2_8   43   44  GP2_9
          DGND  45   46  DGND               GP2_6   45   46  GP2_7
-  P9P9P9P9P9P9P9P9P9P9P9P9P9          P8PP8PP8PP8PP8PP8PP8PP8PP8P8
+  P9P9P9P9P9P9P9P9P9P9P9P9P9          P8P8P8P8P8P8P8P8P8P8P8P8P8P8P8P8
 */
 #ifndef _GPIO_H
 #define _GPIO_H
@@ -59,20 +59,20 @@ ssize_t led_read (struct file *filp,
 
 #define GPIO0   0x48E07000
 #define GPIO1   0x4804c000
+#define GPIO1_0 0x800			/* First pin of GPIO1 */
 #define GPIO2   0x481AC000
-#define GPIO2_0 0x888
+#define GPIO2_0 0x888			/* First pin of GPIO2 */
 
 #define GPIO3   0x481AE000
 
-#define	OE		(0x134/4)      /* Input/Output select. 0 as output */
+#define CTRL    (0x130/4)		/* GPIO control register */
+#define	OE		(0x134/4)		/* Input/Output select. 0 as output */
 #define	DATIN	(0x138/4)
 #define DATOUT	(0x13c/4)
 #define	CLR     (0x190/4)
 #define SET     (0x194/4)
 
 #define CONTRL	0x44e10000
-#define AD12    (0x830/4)
-#define AD13    (0x834/4)
 
 #define	DEVICE_NAME		"/dev/gpio_led"
 
